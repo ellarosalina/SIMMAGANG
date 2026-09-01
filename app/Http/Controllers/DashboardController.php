@@ -8,6 +8,7 @@ use App\Models\Mahasiswa;
 use App\Models\Penempatan;
 use App\Models\Sekolah;
 use Illuminate\Support\Facades\Auth;
+use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
@@ -63,16 +64,18 @@ class DashboardController extends Controller
             'revisi'
         )->count();
 
-        return view('dashboards.admin', compact(
-            'totalMahasiswa',
-            'totalSekolah',
-            'totalGuruPamong',
-            'totalPenempatan',
-            'penempatanPerStatus',
-            'logbookMenunggu',
-            'logbookDisetujui',
-            'logbookRevisi'
-        ));
+        return Inertia::render('Dashboard', [
+            'title' => 'Dashboard',
+            'subtitle' => 'Sistem Informasi Monitoring Magang Mahasiswa.',
+            'totalMahasiswa' => $totalMahasiswa,
+            'totalSekolah' => $totalSekolah,
+            'totalGuruPamong' => $totalGuruPamong,
+            'totalPenempatan' => $totalPenempatan,
+            'penempatanPerStatus' => $penempatanPerStatus,
+            'logbookMenunggu' => $logbookMenunggu,
+            'logbookDisetujui' => $logbookDisetujui,
+            'logbookRevisi' => $logbookRevisi,
+        ]);
     }
 
     public function guruPamong()

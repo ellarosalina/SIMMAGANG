@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sekolah;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class SekolahController extends Controller
 {
@@ -13,21 +14,24 @@ class SekolahController extends Controller
 
         $sekolahs = Sekolah::when($search, function ($query) use ($search) {
             $query->where('nama_sekolah', 'like', "%{$search}%")
-                  ->orWhere('npsn', 'like', "%{$search}%")
-                  ->orWhere('jenjang', 'like', "%{$search}%")
-                  ->orWhere('kecamatan', 'like', "%{$search}%")
-                  ->orWhere('kabupaten', 'like', "%{$search}%");
+                ->orWhere('npsn', 'like', "%{$search}%")
+                ->orWhere('jenjang', 'like', "%{$search}%")
+                ->orWhere('kecamatan', 'like', "%{$search}%")
+                ->orWhere('kabupaten', 'like', "%{$search}%");
         })
-        ->latest()
-        ->paginate(10)
-        ->withQueryString();
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
 
-        return view('admin.sekolah.index', compact('sekolahs', 'search'));
+        return Inertia::render('Admin/Sekolah/Index', [
+            'sekolahs' => $sekolahs,
+            'search' => $search,
+        ]);
     }
 
     public function create()
     {
-        return view('admin.sekolah.create');
+        return Inertia::render('Admin/Sekolah/Create');
     }
 
     public function store(Request $request)
@@ -46,17 +50,23 @@ class SekolahController extends Controller
 
         Sekolah::create($request->all());
 
-        return redirect()->route('admin.sekolah.index')->with('success', 'Data sekolah berhasil ditambahkan.');
+        return redirect()
+            ->route('admin.sekolah.index')
+            ->with('success', 'Data sekolah berhasil ditambahkan.');
     }
 
     public function show(Sekolah $sekolah)
     {
-        return view('admin.sekolah.show', compact('sekolah'));
+        return Inertia::render('Admin/Sekolah/Show', [
+            'sekolah' => $sekolah,
+        ]);
     }
 
     public function edit(Sekolah $sekolah)
     {
-        return view('admin.sekolah.edit', compact('sekolah'));
+        return Inertia::render('Admin/Sekolah/Edit', [
+            'sekolah' => $sekolah,
+        ]);
     }
 
     public function update(Request $request, Sekolah $sekolah)
@@ -75,13 +85,17 @@ class SekolahController extends Controller
 
         $sekolah->update($request->all());
 
-        return redirect()->route('admin.sekolah.index')->with('success', 'Data sekolah berhasil diperbarui.');
+        return redirect()
+            ->route('admin.sekolah.index')
+            ->with('success', 'Data sekolah berhasil diperbarui.');
     }
 
     public function destroy(Sekolah $sekolah)
     {
         $sekolah->delete();
 
-        return redirect()->route('admin.sekolah.index')->with('success', 'Data sekolah berhasil dihapus.');
+        return redirect()
+            ->route('admin.sekolah.index')
+            ->with('success', 'Data sekolah berhasil dihapus.');
     }
 }
