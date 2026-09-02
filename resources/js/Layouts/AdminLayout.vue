@@ -1,256 +1,439 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { router, usePage } from '@inertiajs/vue3';
+import { computed, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import { Link, router, usePage, Head } from '@inertiajs/vue3';
+import Choices from 'choices.js';
+import 'choices.js/public/assets/styles/choices.min.css';
 
 const page = usePage();
 
-const dataMasterOpen = ref(false);
+const user = computed(() => {
+    return page.props.auth?.user || {};
+});
 
-const currentUrl = computed(() => page.url);
-
-const userName = computed(() => {
-    return page.props.auth?.user?.name ?? 'Admin GTK';
+const currentUrl = computed(() => {
+    return page.url || window.location.pathname;
 });
 
 const pageTitle = computed(() => {
-    return page.props.title ?? 'Dashboard';
+    const url = currentUrl.value;
+
+    if (url.startsWith('/admin/sekolah')) return 'Sekolah';
+    if (url.startsWith('/admin/guru-pamong')) return 'Guru Pamong';
+    if (url.startsWith('/admin/mahasiswa')) return 'Mahasiswa';
+    if (url.startsWith('/admin/penempatan')) return 'Penempatan';
+    if (url.startsWith('/admin/monitoring')) return 'Monitoring';
+    if (url.startsWith('/admin/users')) return 'Manajemen User';
+    if (url.startsWith('/admin/profil')) return 'Profil';
+
+    return 'Dashboard';
 });
 
 const pageSubtitle = computed(() => {
-    return page.props.subtitle ?? null;
+    const url = currentUrl.value;
+
+    if (url === '/admin/dashboard') {
+        return 'Sistem Informasi Monitoring Magang Mahasiswa.';
+    }
+
+    if (url === '/admin/sekolah') {
+        return 'Kelola data sekolah.';
+    }
+
+    if (url.includes('/admin/sekolah/create')) {
+        return 'Tambah data sekolah baru.';
+    }
+
+    if (url.includes('/admin/sekolah/') && url.includes('/edit')) {
+        return 'Ubah data sekolah.';
+    }
+
+    if (url.startsWith('/admin/guru-pamong')) {
+        if (url.includes('/create')) return 'Buat akun dan data guru pamong baru.';
+        if (url.includes('/edit')) return 'Ubah data guru pamong.';
+        return 'Kelola data guru pamong.';
+    }
+
+    if (url.startsWith('/admin/mahasiswa')) {
+        if (url.includes('/create')) return 'Buat akun dan data mahasiswa baru.';
+        if (url.includes('/edit')) return 'Ubah data mahasiswa.';
+        return 'Kelola data mahasiswa.';
+    }
+
+    if (url.startsWith('/admin/penempatan')) {
+        if (url.includes('/create')) return 'Assign mahasiswa ke sekolah, guru pamong, dan dosen pembimbing.';
+        if (url.includes('/edit')) return 'Ubah data penempatan magang.';
+        return 'Kelola data penempatan magang.';
+    }
+
+    if (url.startsWith('/admin/monitoring')) {
+        return 'Monitoring pelaksanaan magang mahasiswa.';
+    }
+
+    if (url.startsWith('/admin/users')) {
+        return 'Kelola akun pengguna sistem.';
+    }
+
+    if (url.startsWith('/admin/profil')) {
+        return 'Kelola profil administrator.';
+    }
+
+    return '';
 });
 
 const isActive = (path) => {
+    const url = currentUrl.value;
+
     if (path === '/admin/dashboard') {
-        return currentUrl.value === path;
+        return url === '/admin/dashboard';
     }
 
-    return currentUrl.value.startsWith(path);
-};
-
-const isDataMasterActive = computed(() => {
-    return (
-        currentUrl.value.startsWith('/admin/sekolah') ||
-        currentUrl.value.startsWith('/admin/guru-pamong') ||
-        currentUrl.value.startsWith('/admin/mahasiswa')
-    );
-});
-
-const toggleDataMaster = () => {
-    dataMasterOpen.value = !dataMasterOpen.value;
+    return url.startsWith(path);
 };
 
 const logout = () => {
     router.post('/logout');
 };
+
+/* ================================
+   CHOICES.JS (searchable select)
+   ================================ */
+let choicesInstances = {};
+
+const initChoices = async () => {
+    await nextTick();
+
+    // hancurkan instance lama supaya tidak duplikat saat pindah halaman
+    Object.values(choicesInstances).forEach((instance) => instance.destroy());
+    choicesInstances = {};
+
+    document.querySelectorAll('.searchable-select').forEach((el) => {
+        choicesInstances[el.name] = new Choices(el, {
+            searchEnabled: true,
+            itemSelectText: '',
+            shouldSort: false,
+        });
+    });
+};
+
+let removeNavigateListener;
+
+onMounted(() => {
+    initChoices();
+
+    // re-init tiap kali Inertia berpindah halaman (SPA, bukan full reload)
+    removeNavigateListener = router.on('navigate', () => {
+        initChoices();
+    });
+});
+
+onBeforeUnmount(() => {
+    Object.values(choicesInstances).forEach((instance) => instance.destroy());
+    if (removeNavigateListener) {
+        removeNavigateListener();
+    }
+});
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-100">
-        <div class="flex min-h-screen">
-            <aside class="w-64 bg-slate-800 text-white flex-shrink-0 flex flex-col">
-                <div class="p-4 text-lg font-bold border-b border-slate-700 flex items-center gap-2">
-                    <span class="text-blue-400">
-                        SIM
+    <Head>
+        <title>{{ pageTitle }} - SIM Magang GTK</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </Head>
+
+    <div class="min-h-screen flex bg-gray-100 overflow-x-hidden">
+
+        <!-- SIDEBAR -->
+        <aside
+            class="w-64 bg-slate-800 text-white flex-shrink-0 sticky top-0 h-screen overflow-hidden flex flex-col"
+        >
+
+            <!-- LOGO -->
+            <div
+                class="p-4 text-lg font-bold border-b border-slate-700 flex items-center gap-2 flex-shrink-0"
+            >
+                <span class="text-blue-400">
+                    SIM
+                </span>
+
+                MagangGTK
+            </div>
+
+            <!-- PROFILE ADMIN -->
+            <div
+                class="p-4 flex items-center gap-3 border-b border-slate-700 flex-shrink-0"
+            >
+                <div
+                    class="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-lg font-bold overflow-hidden flex-shrink-0"
+                >
+                    <img
+                        v-if="user.foto"
+                        :src="`/storage/${user.foto}`"
+                        alt="Foto Profil"
+                        class="w-full h-full object-cover"
+                    >
+
+                    <span v-else>
+                        {{
+                            user.name
+                                ? user.name.substring(0, 1).toUpperCase()
+                                : 'A'
+                        }}
                     </span>
+                </div>
+
+                <div class="min-w-0">
+                    <p
+                        class="text-sm font-semibold leading-tight truncate"
+                    >
+                        {{ user.name || 'Admin' }}
+                    </p>
+
+                    <p
+                        class="text-xs text-green-400 flex items-center gap-1 mt-0.5"
+                    >
+                        <span
+                            class="w-2 h-2 bg-green-400 rounded-full inline-block"
+                        ></span>
+
+                        Online
+                    </p>
+                </div>
+            </div>
+
+            <!-- MENU SIDEBAR -->
+            <nav
+                class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-2"
+            >
+
+                <!-- UTAMA -->
+                <div
+                    class="px-4 pt-2 pb-1 text-xs text-slate-400 uppercase tracking-wide"
+                >
+                    Utama
+                </div>
+
+                <Link
+                    href="/admin/dashboard"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/dashboard') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a2 2 0 001 2v-4a1 1 0 011-1h2a1 1 0 011 1v4a2 2 0 001 2m-6 0h6"
+                        />
+                    </svg>
+
                     <span>
-                        MagangGTK
-                    </span>
-                </div>
-
-                <div class="p-4 flex items-center gap-3 border-b border-slate-700">
-                    <div class="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-lg font-bold">
-                        {{ userName.charAt(0).toUpperCase() }}
-                    </div>
-
-                    <div class="min-w-0">
-                        <p class="text-sm font-semibold leading-tight truncate">
-                            {{ userName }}
-                        </p>
-
-                        <p class="text-xs text-green-400 flex items-center gap-1 mt-1">
-                            <span class="w-2 h-2 bg-green-400 rounded-full"></span>
-                            Online
-                        </p>
-                    </div>
-                </div>
-
-                <p class="px-4 pt-4 pb-2 text-xs text-slate-400 uppercase tracking-wide">
-                    Main Navigation
-                </p>
-
-                <nav class="flex-1 overflow-y-auto">
-                    <button
-                        type="button"
-                        @click="router.visit('/admin/dashboard')"
-                        :class="[
-                            'w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors duration-150 text-left',
-                            isActive('/admin/dashboard')
-                                ? 'bg-blue-600'
-                                : 'hover:bg-slate-700'
-                        ]"
-                    >
-                        <svg
-                            class="w-5 h-5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a2 2 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                            />
-                        </svg>
-
                         Dashboard
-                    </button>
+                    </span>
+                </Link>
 
-                    <button
-                        type="button"
-                        @click="toggleDataMaster"
-                        :class="[
-                            'w-full flex items-center justify-between px-4 py-3 text-sm transition-colors duration-150',
-                            isDataMasterActive
-                                ? 'bg-slate-700'
-                                : 'hover:bg-slate-700'
-                        ]"
+                <!-- DATA MASTER -->
+                <div
+                    class="px-4 pt-3 pb-1 text-xs text-slate-400 uppercase tracking-wide"
+                >
+                    Data Master
+                </div>
+
+                <Link
+                    href="/admin/sekolah"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/sekolah') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                     >
-                        <span class="flex items-center gap-3">
-                            <svg
-                                class="w-5 h-5 flex-shrink-0"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="2"
-                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"
-                                />
-                            </svg>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5"
+                        />
+                    </svg>
 
-                            Data Master
-                        </span>
+                    <span>
+                        Sekolah
+                    </span>
+                </Link>
 
-                        <svg
-                            class="w-4 h-4 flex-shrink-0 transition-transform duration-200"
-                            :class="dataMasterOpen ? 'rotate-90' : ''"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5l7 7-7 7"
-                            />
-                        </svg>
-                    </button>
-
-                    <div
-                        v-show="dataMasterOpen"
-                        class="bg-slate-900"
+                <Link
+                    href="/admin/guru-pamong"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/guru-pamong') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                     >
-                        <button
-                            type="button"
-                            @click="router.visit('/admin/sekolah')"
-                            :class="[
-                                'w-full flex items-center gap-2 pl-12 pr-4 py-2.5 text-sm text-left transition-colors duration-150 hover:bg-slate-700',
-                                isActive('/admin/sekolah')
-                                    ? 'bg-slate-700 text-blue-400'
-                                    : 'text-slate-300'
-                            ]"
-                        >
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-                            Sekolah
-                        </button>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 12a5 5 0 100-10 5 5 0 000 10zm-7 9a7 7 0 0114 0M19 8l2 2-4 4-2-2"
+                        />
+                    </svg>
 
-                        <button
-                            type="button"
-                            @click="router.visit('/admin/guru-pamong')"
-                            :class="[
-                                'w-full flex items-center gap-2 pl-12 pr-4 py-2.5 text-sm text-left transition-colors duration-150 hover:bg-slate-700',
-                                isActive('/admin/guru-pamong')
-                                    ? 'bg-slate-700 text-blue-400'
-                                    : 'text-slate-300'
-                            ]"
-                        >
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-                            Guru Pamong
-                        </button>
+                    <span>
+                        Guru Pamong
+                    </span>
+                </Link>
 
-                        <button
-                            type="button"
-                            @click="router.visit('/admin/mahasiswa')"
-                            :class="[
-                                'w-full flex items-center gap-2 pl-12 pr-4 py-2.5 text-sm text-left transition-colors duration-150 hover:bg-slate-700',
-                                isActive('/admin/mahasiswa')
-                                    ? 'bg-slate-700 text-blue-400'
-                                    : 'text-slate-300'
-                            ]"
-                        >
-                            <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
-                            Mahasiswa
-                        </button>
-                    </div>
-
-                    <button
-                        type="button"
-                        @click="router.visit('/admin/penempatan')"
-                        :class="[
-                            'w-full flex items-center gap-3 px-4 py-3 text-sm text-left transition-colors duration-150 hover:bg-slate-700 transition-colors duration-150',
-                            isActive('/admin/penempatan')
-                                ? 'bg-blue-600'
-                                : ''
-                        ]"
+                <Link
+                    href="/admin/mahasiswa"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/mahasiswa') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                     >
-                        <svg
-                            class="w-5 h-5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                            />
-                        </svg>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15 19a4 4 0 00-8 0m4-8a3 3 0 100-6 3 3 0 000 6zm7-1a2 2 0 100-4 2 2 0 000 4zm-1 3a3 3 0 013 3"
+                        />
+                    </svg>
 
+                    <span>
+                        Mahasiswa
+                    </span>
+                </Link>
+
+                <!-- MANAJEMEN -->
+                <div
+                    class="px-4 pt-3 pb-1 text-xs text-slate-400 uppercase tracking-wide"
+                >
+                    Manajemen
+                </div>
+
+                <Link
+                    href="/admin/penempatan"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/penempatan') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 0 0-2-2h-2M9 5a3 3 0 006 0M9 5a2 2 0 012-2h2a2 2 0 012 2m-5 5h.01M9 13h6m-6 4h6"
+                        />
+                    </svg>
+
+                    <span>
                         Penempatan
-                    </button>
+                    </span>
+                </Link>
 
-                    <button
-                        type="button"
-                        @click="router.visit('/profile')"
-                        class="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors duration-150 hover:bg-slate-700"
+                <Link
+                    href="/admin/monitoring"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/monitoring') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
                     >
-                        <svg
-                            class="w-5 h-5 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M12 12a5 5 0 100-10 5 5 0 000 10zm-7 9a7 7 0 0114 0"
-                            />
-                        </svg>
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m0 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2"
+                        />
+                    </svg>
 
+                    <span>
+                        Monitoring
+                    </span>
+                </Link>
+
+                <!-- PENGATURAN -->
+                <div
+                    class="px-4 pt-3 pb-1 text-xs text-slate-400 uppercase tracking-wide"
+                >
+                    Pengaturan
+                </div>
+
+                <Link
+                    href="/admin/users"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/users') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m6-1.13a4 4 0 100-8 4 4 0 000 8zm6 2a4 4 0 00-3-3.87m-9 3.87a4 4 0 013-3.87"
+                        />
+                    </svg>
+
+                    <span>
+                        Manajemen User
+                    </span>
+                </Link>
+
+                <Link
+                    href="/admin/profil"
+                    class="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700"
+                    :class="isActive('/admin/profil') ? 'bg-blue-600' : ''"
+                >
+                    <svg
+                        class="w-5 h-5 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 12a5 5 0 100-10 5 5 0 000 10zm-8 9a8 8 0 0116 0"
+                        />
+                    </svg>
+
+                    <span>
                         Profil
-                    </button>
+                    </span>
+                </Link>
 
+                <!-- LOGOUT -->
+                <form
+                    @submit.prevent="logout"
+                    class="border-t border-slate-700 mt-2 pt-2"
+                >
                     <button
-                        type="button"
-                        @click="logout"
-                        class="w-full text-left flex items-center gap-3 px-4 py-3 text-sm transition-colors duration-150 hover:bg-slate-700"
+                        type="submit"
+                        class="w-full text-left flex items-center gap-3 px-4 py-2.5 text-sm hover:bg-slate-700"
                     >
                         <svg
                             class="w-5 h-5 flex-shrink-0"
@@ -266,39 +449,54 @@ const logout = () => {
                             />
                         </svg>
 
-                        Logout
-                    </button>
-                </nav>
-            </aside>
-
-            <div class="flex-1 flex flex-col min-w-0">
-                <header class="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-                    <div>
-                        <h1 class="text-lg font-semibold text-gray-800">
-                            {{ pageTitle }}
-                        </h1>
-
-                        <p
-                            v-if="pageSubtitle"
-                            class="text-xs text-gray-400"
-                        >
-                            {{ pageSubtitle }}
-                        </p>
-                    </div>
-
-                    <div class="text-sm text-gray-600">
-                        {{ userName }}
-
-                        <span class="text-gray-400">
-                            - Admin GTK
+                        <span>
+                            Logout
                         </span>
-                    </div>
-                </header>
+                    </button>
+                </form>
 
-                <main class="p-6 flex-1">
-                    <slot />
-                </main>
-            </div>
+            </nav>
+        </aside>
+
+        <!-- KONTEN UTAMA -->
+        <div class="flex-1 min-w-0 flex flex-col">
+
+            <!-- HEADER -->
+            <header
+                class="bg-white shadow-sm px-6 py-4 flex justify-between items-center flex-shrink-0"
+            >
+                <div class="min-w-0">
+                    <h1
+                        class="text-lg font-semibold text-gray-800 truncate"
+                    >
+                        {{ pageTitle }}
+                    </h1>
+
+                    <p
+                        class="text-xs text-gray-400 truncate"
+                    >
+                        {{ pageSubtitle }}
+                    </p>
+                </div>
+
+                <div
+                    class="text-sm text-gray-600 flex-shrink-0"
+                >
+                    {{ user.name || 'Admin' }}
+
+                    <span class="text-gray-400">
+                        - Admin GTK
+                    </span>
+                </div>
+            </header>
+
+            <!-- ISI HALAMAN -->
+            <main
+                class="flex-1 min-w-0 w-full max-w-full p-6 overflow-x-hidden overflow-y-auto"
+            >
+                <slot />
+            </main>
+
         </div>
     </div>
 </template>

@@ -20,7 +20,7 @@ class SekolahController extends Controller
                 ->orWhere('kabupaten', 'like', "%{$search}%");
         })
             ->latest()
-            ->paginate(10)
+            ->paginate(5)
             ->withQueryString();
 
         return Inertia::render('Admin/Sekolah/Index', [

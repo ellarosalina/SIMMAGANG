@@ -8,7 +8,7 @@ defineOptions({
 });
 
 const props = defineProps({
-    sekolahs: {
+    guruPamongs: {
         type: Object,
         required: true,
     },
@@ -20,9 +20,9 @@ const props = defineProps({
 
 const search = ref(props.search || '');
 
-const cariSekolah = () => {
+const cariGuruPamong = () => {
     router.get(
-        '/admin/sekolah',
+        '/admin/guru-pamong',
         {
             search: search.value,
         },
@@ -38,7 +38,7 @@ const resetSearch = () => {
     search.value = '';
 
     router.get(
-        '/admin/sekolah',
+        '/admin/guru-pamong',
         {},
         {
             preserveState: true,
@@ -48,37 +48,37 @@ const resetSearch = () => {
     );
 };
 
-const createSekolah = () => {
-    router.visit('/admin/sekolah/create');
+const createGuruPamong = () => {
+    router.visit('/admin/guru-pamong/create');
 };
 
-const editSekolah = (id) => {
-    router.visit(`/admin/sekolah/${id}/edit`);
+const editGuruPamong = (id) => {
+    router.visit(`/admin/guru-pamong/${id}/edit`);
 };
 
 const showDeleteModal = ref(false);
-const selectedSekolah = ref(null);
+const selectedGuruPamong = ref(null);
 
-const deleteSekolah = (sekolah) => {
-    selectedSekolah.value = sekolah;
+const deleteGuruPamong = (guruPamong) => {
+    selectedGuruPamong.value = guruPamong;
     showDeleteModal.value = true;
 };
 
 const cancelDelete = () => {
     showDeleteModal.value = false;
-    selectedSekolah.value = null;
+    selectedGuruPamong.value = null;
 };
 
 const confirmDelete = () => {
-    if (!selectedSekolah.value) {
+    if (!selectedGuruPamong.value) {
         return;
     }
 
-    router.delete(`/admin/sekolah/${selectedSekolah.value.id}`, {
+    router.delete(`/admin/guru-pamong/${selectedGuruPamong.value.id}`, {
         preserveScroll: true,
         onSuccess: () => {
             showDeleteModal.value = false;
-            selectedSekolah.value = null;
+            selectedGuruPamong.value = null;
         },
     });
 };
@@ -110,33 +110,16 @@ const getPageUrl = (page) => {
 
 const numberOf = (index) => {
     return (
-        (props.sekolahs.current_page - 1) *
-            props.sekolahs.per_page +
+        (props.guruPamongs.current_page - 1) *
+            props.guruPamongs.per_page +
         index +
         1
     );
-};
-
-const formatStatus = (status) => {
-    if (!status) {
-        return '-';
-    }
-
-    return status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
-};
-
-const formatJenjang = (jenjang) => {
-    if (!jenjang) {
-        return '-';
-    }
-
-    return jenjang.toUpperCase();
 };
 </script>
 
 <template>
     <div>
-        <!-- PESAN BERHASIL -->
         <div
             v-if="$page.props.flash?.success"
             class="mb-4 p-4 bg-green-100 text-green-700 rounded"
@@ -144,11 +127,10 @@ const formatJenjang = (jenjang) => {
             {{ $page.props.flash.success }}
         </div>
 
-        <!-- HEADER -->
         <div class="flex items-center justify-between mb-4">
             <button
                 type="button"
-                @click="createSekolah"
+                @click="createGuruPamong"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg text-sm hover:bg-gray-50"
             >
                 <svg
@@ -166,16 +148,16 @@ const formatJenjang = (jenjang) => {
                     />
                 </svg>
 
-                <span>Tambah Sekolah</span>
+                <span>Tambah Guru Pamong</span>
             </button>
 
             <div class="flex items-center gap-2">
-                <form @submit.prevent="cariSekolah">
+                <form @submit.prevent="cariGuruPamong">
                     <div class="relative">
                         <input
                             v-model="search"
                             type="text"
-                            placeholder="Cari Sekolah..."
+                            placeholder="Cari Nama Guru Pamong..."
                             class="w-64 pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-gray-200 focus:border-gray-400"
                         >
 
@@ -270,52 +252,35 @@ const formatJenjang = (jenjang) => {
             </div>
         </div>
 
-        <!-- TABEL -->
         <div class="bg-white rounded-lg shadow-sm overflow-x-auto">
-            <table class="w-max min-w-full text-left">
+            <table class="w-full text-left">
                 <thead class="bg-gray-50 border-b">
                     <tr>
-                        <th class="p-3 text-sm font-semibold text-gray-600 w-12 whitespace-nowrap">
+                        <th class="p-3 text-sm font-semibold text-gray-600 w-12">
                             No
                         </th>
 
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            NPSN
+                        <th class="p-3 text-sm font-semibold text-gray-600">
+                            Nama
                         </th>
 
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Nama Sekolah
+                        <th class="p-3 text-sm font-semibold text-gray-600">
+                            Email
                         </th>
 
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Kepala Sekolah
+                        <th class="p-3 text-sm font-semibold text-gray-600">
+                            Sekolah
                         </th>
 
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Jenjang
+                        <th class="p-3 text-sm font-semibold text-gray-600">
+                            NIP
                         </th>
 
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Kecamatan
+                        <th class="p-3 text-sm font-semibold text-gray-600">
+                            Mapel
                         </th>
 
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Kabupaten
-                        </th>
-
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Alamat
-                        </th>
-
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Status
-                        </th>
-
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
-                            Kuota
-                        </th>
-
-                        <th class="p-3 text-sm font-semibold text-gray-600 whitespace-nowrap">
+                        <th class="p-3 text-sm font-semibold text-gray-600">
                             Aksi
                         </th>
                     </tr>
@@ -323,56 +288,39 @@ const formatJenjang = (jenjang) => {
 
                 <tbody>
                     <tr
-                        v-for="(sekolah, index) in sekolahs.data"
-                        :key="sekolah.id"
+                        v-for="(guruPamong, index) in guruPamongs.data"
+                        :key="guruPamong.id"
                         class="border-b hover:bg-gray-50"
                     >
-                        <td class="p-3 text-sm whitespace-nowrap">
+                        <td class="p-3 text-sm">
                             {{ numberOf(index) }}
                         </td>
 
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ sekolah.npsn || '-' }}
+                        <td class="p-3 text-sm">
+                            {{ guruPamong.user?.name || '-' }}
                         </td>
 
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ sekolah.nama_sekolah || '-' }}
+                        <td class="p-3 text-sm">
+                            {{ guruPamong.user?.email || '-' }}
                         </td>
 
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ sekolah.kepala_sekolah || '-' }}
+                        <td class="p-3 text-sm">
+                            {{ guruPamong.sekolah?.nama_sekolah || '-' }}
                         </td>
 
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ formatJenjang(sekolah.jenjang) }}
+                        <td class="p-3 text-sm">
+                            {{ guruPamong.nip || '-' }}
                         </td>
 
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ sekolah.kecamatan || '-' }}
+                        <td class="p-3 text-sm">
+                            {{ guruPamong.mapel || '-' }}
                         </td>
 
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ sekolah.kabupaten || '-' }}
-                        </td>
-
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ sekolah.alamat || '-' }}
-                        </td>
-
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ formatStatus(sekolah.status) }}
-                        </td>
-
-                        <td class="p-3 text-sm whitespace-nowrap">
-                            {{ sekolah.kuota_magang ?? '-' }}
-                        </td>
-
-                        <td class="p-3 text-sm whitespace-nowrap">
+                        <td class="p-3 text-sm">
                             <div class="flex items-center gap-2">
-                                <!-- EDIT -->
                                 <button
                                     type="button"
-                                    @click="editSekolah(sekolah.id)"
+                                    @click="editGuruPamong(guruPamong.id)"
                                     title="Edit"
                                     class="inline-flex items-center justify-center w-8 h-8 text-blue-600 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100"
                                 >
@@ -391,10 +339,9 @@ const formatJenjang = (jenjang) => {
                                     </svg>
                                 </button>
 
-                                <!-- HAPUS -->
                                 <button
                                     type="button"
-                                    @click="deleteSekolah(sekolah)"
+                                    @click="deleteGuruPamong(guruPamong)"
                                     title="Hapus"
                                     class="inline-flex items-center justify-center w-8 h-8 text-red-600 bg-red-50 border border-red-200 rounded-md hover:bg-red-100"
                                 >
@@ -416,53 +363,49 @@ const formatJenjang = (jenjang) => {
                         </td>
                     </tr>
 
-                    <!-- DATA KOSONG -->
                     <tr
                         v-if="
-                            !sekolahs.data ||
-                            sekolahs.data.length === 0
+                            !guruPamongs.data ||
+                            guruPamongs.data.length === 0
                         "
                     >
                         <td
-                            colspan="11"
+                            colspan="7"
                             class="p-4 text-center text-gray-500"
                         >
                             <span v-if="search">
-                                Data sekolah "{{ search }}" tidak ditemukan.
+                                Data guru pamong "{{ search }}" tidak ditemukan.
                             </span>
 
                             <span v-else>
-                                Belum ada data sekolah.
+                                Belum ada data guru pamong.
                             </span>
                         </td>
                     </tr>
                 </tbody>
 
-                <!-- TOTAL -->
                 <tfoot>
                     <tr class="bg-gray-50 border-t font-semibold">
                         <td
-                            colspan="11"
+                            colspan="7"
                             class="p-3 text-sm"
                         >
-                            Total: {{ sekolahs.total }}
+                            Total: {{ guruPamongs.total }}
                         </td>
                     </tr>
                 </tfoot>
             </table>
         </div>
 
-        <!-- PAGINATION -->
         <div
-            v-if="sekolahs.last_page > 1"
+            v-if="guruPamongs.last_page > 1"
             class="mt-4 flex justify-end"
         >
             <div class="flex items-center gap-1">
-                <!-- PREVIOUS -->
                 <button
-                    v-if="sekolahs.prev_page_url"
+                    v-if="guruPamongs.prev_page_url"
                     type="button"
-                    @click="goToPage(sekolahs.prev_page_url)"
+                    @click="goToPage(guruPamongs.prev_page_url)"
                     class="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                     ‹
@@ -475,15 +418,14 @@ const formatJenjang = (jenjang) => {
                     ‹
                 </span>
 
-                <!-- NOMOR HALAMAN -->
                 <button
-                    v-for="page in sekolahs.last_page"
+                    v-for="page in guruPamongs.last_page"
                     :key="page"
                     type="button"
                     @click="goToPage(getPageUrl(page))"
                     class="px-3 py-2 text-sm rounded-md"
                     :class="
-                        page === sekolahs.current_page
+                        page === guruPamongs.current_page
                             ? 'text-gray-900 bg-white border border-gray-400 font-bold'
                             : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                     "
@@ -491,11 +433,10 @@ const formatJenjang = (jenjang) => {
                     {{ page }}
                 </button>
 
-                <!-- NEXT -->
                 <button
-                    v-if="sekolahs.next_page_url"
+                    v-if="guruPamongs.next_page_url"
                     type="button"
-                    @click="goToPage(sekolahs.next_page_url)"
+                    @click="goToPage(guruPamongs.next_page_url)"
                     class="px-3 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
                 >
                     ›
@@ -520,7 +461,6 @@ const formatJenjang = (jenjang) => {
                 class="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden"
                 @click.stop
             >
-                <!-- HEADER MODAL -->
                 <div class="px-6 py-5 border-b">
                     <div class="flex items-center gap-3">
                         <div
@@ -536,14 +476,14 @@ const formatJenjang = (jenjang) => {
                                     stroke-linecap="round"
                                     stroke-linejoin="round"
                                     stroke-width="2"
-                                    d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14A2 2 0 003.84 21h16.32a2 2 0 001.73-3.14l-8.18-14a2 2 0 0 0 3.42 0z"
+                                    d="M12 9v4m0 4h.01M10.29 3.86l-8.18 14A2 2 0 003.84 21h16.32a2 2 0 001.73-3.14l-8.18-14a2 2 0 00-3.42 0z"
                                 />
                             </svg>
                         </div>
 
                         <div>
                             <h2 class="text-lg font-semibold text-gray-800">
-                                Hapus Sekolah?
+                                Hapus Guru Pamong?
                             </h2>
 
                             <p class="text-sm text-gray-500 mt-1">
@@ -553,23 +493,22 @@ const formatJenjang = (jenjang) => {
                     </div>
                 </div>
 
-                <!-- ISI MODAL -->
                 <div class="px-6 py-5">
                     <p class="text-sm text-gray-600 leading-6">
-                        Apakah kamu yakin ingin menghapus sekolah ini?
+                        Apakah kamu yakin ingin menghapus guru pamong ini?
 
                         <span
-                            v-if="selectedSekolah"
+                            v-if="selectedGuruPamong"
                             class="font-semibold text-gray-800"
                         >
-                            {{ selectedSekolah.nama_sekolah || '' }}
+                            {{ selectedGuruPamong.user?.name || '' }}
                         </span>
 
+                        Akun login guru pamong ini juga akan terhapus.
                         Data yang sudah dihapus tidak dapat dikembalikan.
                     </p>
                 </div>
 
-                <!-- FOOTER MODAL -->
                 <div
                     class="px-6 py-4 border-t bg-gray-50 flex justify-end gap-2"
                 >

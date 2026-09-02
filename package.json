@@ -20,6 +20,7 @@
     "dependencies": {
         "@inertiajs/vue3": "^3.7.0",
         "@vitejs/plugin-vue": "^6.0.8",
+        "choices.js": "^11.2.4",
         "vue": "^3.5.42"
     }
 }

@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Inertia\Inertia;
 
 class GuruPamongController extends Controller
 {
@@ -21,7 +22,7 @@ class GuruPamongController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('user', function ($q) use ($search) {
                         $q->where('name', 'like', "%{$search}%")
-                          ->orWhere('email', 'like', "%{$search}%");
+                            ->orWhere('email', 'like', "%{$search}%");
                     })
                     ->orWhereHas('sekolah', function ($q) use ($search) {
                         $q->where('nama_sekolah', 'like', "%{$search}%");
@@ -34,14 +35,20 @@ class GuruPamongController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('admin.guru-pamong.index', compact('guruPamongs', 'search'));
+        return Inertia::render('Admin/GuruPamong/Index', [
+            'guruPamongs' => $guruPamongs,
+            'search' => $search,
+        ]);
     }
 
     // Tampilkan form tambah guru pamong
     public function create()
     {
-        $sekolahs = Sekolah::where('status', 'aktif')->get();
-        return view('admin.guru-pamong.create', compact('sekolahs'));
+        $sekolahs = Sekolah::latest()->get();
+
+        return Inertia::render('Admin/GuruPamong/Create', [
+            'sekolahs' => $sekolahs,
+        ]);
     }
 
     // Simpan data guru pamong baru
@@ -75,9 +82,12 @@ class GuruPamongController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.guru-pamong.index')->with('success', 'Akun dan data guru pamong berhasil ditambahkan.');
+        return redirect()
+            ->route('admin.guru-pamong.index')
+            ->with('success', 'Akun dan data guru pamong berhasil ditambahkan.');
     }
 
+    // Tampilkan detail guru pamong
     public function show(GuruPamong $guruPamong)
     {
         return view('admin.guru-pamong.show', compact('guruPamong'));
@@ -86,8 +96,14 @@ class GuruPamongController extends Controller
     // Tampilkan form edit
     public function edit(GuruPamong $guruPamong)
     {
-        $sekolahs = Sekolah::where('status', 'aktif')->get();
-        return view('admin.guru-pamong.edit', compact('guruPamong', 'sekolahs'));
+        $sekolahs = Sekolah::latest()->get();
+
+        $guruPamong->load(['user', 'sekolah']);
+
+        return Inertia::render('Admin/GuruPamong/Edit', [
+            'guruPamong' => $guruPamong,
+            'sekolahs' => $sekolahs,
+        ]);
     }
 
     // Update data
@@ -123,7 +139,9 @@ class GuruPamongController extends Controller
             ]);
         });
 
-        return redirect()->route('admin.guru-pamong.index')->with('success', 'Data guru pamong berhasil diperbarui.');
+        return redirect()
+            ->route('admin.guru-pamong.index')
+            ->with('success', 'Data guru pamong berhasil diperbarui.');
     }
 
     // Hapus guru pamong
@@ -131,6 +149,8 @@ class GuruPamongController extends Controller
     {
         $guruPamong->user->delete();
 
-        return redirect()->route('admin.guru-pamong.index')->with('success', 'Data guru pamong berhasil dihapus.');
+        return redirect()
+            ->route('admin.guru-pamong.index')
+            ->with('success', 'Data guru pamong berhasil dihapus.');
     }
 }
