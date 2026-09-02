@@ -48,20 +48,38 @@ const pageSubtitle = computed(() => {
     }
 
     if (url.startsWith('/admin/guru-pamong')) {
-        if (url.includes('/create')) return 'Buat akun dan data guru pamong baru.';
-        if (url.includes('/edit')) return 'Ubah data guru pamong.';
+        if (url.includes('/create')) {
+            return 'Buat akun dan data guru pamong baru.';
+        }
+
+        if (url.includes('/edit')) {
+            return 'Ubah data guru pamong.';
+        }
+
         return 'Kelola data guru pamong.';
     }
 
     if (url.startsWith('/admin/mahasiswa')) {
-        if (url.includes('/create')) return 'Buat akun dan data mahasiswa baru.';
-        if (url.includes('/edit')) return 'Ubah data mahasiswa.';
+        if (url.includes('/create')) {
+            return 'Buat akun dan data mahasiswa baru.';
+        }
+
+        if (url.includes('/edit')) {
+            return 'Ubah data mahasiswa.';
+        }
+
         return 'Kelola data mahasiswa.';
     }
 
     if (url.startsWith('/admin/penempatan')) {
-        if (url.includes('/create')) return 'Assign mahasiswa ke sekolah, guru pamong, dan dosen pembimbing.';
-        if (url.includes('/edit')) return 'Ubah data penempatan magang.';
+        if (url.includes('/create')) {
+            return 'Assign mahasiswa ke sekolah, guru pamong, dan dosen pembimbing.';
+        }
+
+        if (url.includes('/edit')) {
+            return 'Ubah data penempatan magang.';
+        }
+
         return 'Kelola data penempatan magang.';
     }
 
@@ -91,19 +109,24 @@ const isActive = (path) => {
 };
 
 const logout = () => {
-    router.post('/logout');
+    router.post('/logout', {}, {
+        preserveState: false,
+        preserveScroll: false,
+        onSuccess: () => {
+            window.location.href = '/login';
+        },
+    });
 };
 
-/* ================================
-   CHOICES.JS (searchable select)
-   ================================ */
 let choicesInstances = {};
 
 const initChoices = async () => {
     await nextTick();
 
-    // hancurkan instance lama supaya tidak duplikat saat pindah halaman
-    Object.values(choicesInstances).forEach((instance) => instance.destroy());
+    Object.values(choicesInstances).forEach((instance) => {
+        instance.destroy();
+    });
+
     choicesInstances = {};
 
     document.querySelectorAll('.searchable-select').forEach((el) => {
@@ -120,14 +143,16 @@ let removeNavigateListener;
 onMounted(() => {
     initChoices();
 
-    // re-init tiap kali Inertia berpindah halaman (SPA, bukan full reload)
     removeNavigateListener = router.on('navigate', () => {
         initChoices();
     });
 });
 
 onBeforeUnmount(() => {
-    Object.values(choicesInstances).forEach((instance) => instance.destroy());
+    Object.values(choicesInstances).forEach((instance) => {
+        instance.destroy();
+    });
+
     if (removeNavigateListener) {
         removeNavigateListener();
     }
@@ -138,15 +163,18 @@ onBeforeUnmount(() => {
     <Head>
         <title>{{ pageTitle }} - SIM Magang GTK</title>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1"
+        >
     </Head>
 
     <div class="min-h-screen flex bg-gray-100 overflow-x-hidden">
 
         <!-- SIDEBAR -->
         <aside
-            class="w-64 bg-slate-800 text-white flex-shrink-0 sticky top-0 h-screen overflow-hidden flex flex-col"
-        >
+                class="w-64 min-h-screen bg-slate-800 text-white flex-shrink-0 sticky top-0 self-stretch overflow-hidden flex flex-col"
+            >
 
             <!-- LOGO -->
             <div
@@ -237,6 +265,7 @@ onBeforeUnmount(() => {
                     </span>
                 </Link>
 
+
                 <!-- DATA MASTER -->
                 <div
                     class="px-4 pt-3 pb-1 text-xs text-slate-400 uppercase tracking-wide"
@@ -316,6 +345,7 @@ onBeforeUnmount(() => {
                     </span>
                 </Link>
 
+
                 <!-- MANAJEMEN -->
                 <div
                     class="px-4 pt-3 pb-1 text-xs text-slate-400 uppercase tracking-wide"
@@ -370,6 +400,7 @@ onBeforeUnmount(() => {
                         Monitoring
                     </span>
                 </Link>
+
 
                 <!-- PENGATURAN -->
                 <div
@@ -426,6 +457,7 @@ onBeforeUnmount(() => {
                     </span>
                 </Link>
 
+
                 <!-- LOGOUT -->
                 <form
                     @submit.prevent="logout"
@@ -456,7 +488,9 @@ onBeforeUnmount(() => {
                 </form>
 
             </nav>
+
         </aside>
+
 
         <!-- KONTEN UTAMA -->
         <div class="flex-1 min-w-0 flex flex-col">
@@ -465,7 +499,9 @@ onBeforeUnmount(() => {
             <header
                 class="bg-white shadow-sm px-6 py-4 flex justify-between items-center flex-shrink-0"
             >
+
                 <div class="min-w-0">
+
                     <h1
                         class="text-lg font-semibold text-gray-800 truncate"
                     >
@@ -477,6 +513,7 @@ onBeforeUnmount(() => {
                     >
                         {{ pageSubtitle }}
                     </p>
+
                 </div>
 
                 <div
@@ -488,7 +525,9 @@ onBeforeUnmount(() => {
                         - Admin GTK
                     </span>
                 </div>
+
             </header>
+
 
             <!-- ISI HALAMAN -->
             <main
@@ -498,5 +537,6 @@ onBeforeUnmount(() => {
             </main>
 
         </div>
+
     </div>
 </template>

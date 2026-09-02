@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class AdminProfilController extends Controller
 {
@@ -15,7 +16,9 @@ class AdminProfilController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        return view('admin.profil.index', compact('user'));
+        return Inertia::render('Admin/Profil/Index', [
+            'user' => $user,
+        ]);
     }
 
     public function update(Request $request)
@@ -34,23 +37,21 @@ class AdminProfilController extends Controller
         /** @var User $user */
         $user = Auth::user();
 
-        $userData = [];
-
         if ($request->hasFile('foto')) {
             if ($user->foto && Storage::disk('public')->exists($user->foto)) {
                 Storage::disk('public')->delete($user->foto);
             }
 
-            $userData['foto'] = $request->file('foto')->store('foto-profil', 'public');
+            $pathFoto = $request->file('foto')->store('foto-profil', 'public');
+
+            $user->foto = $pathFoto;
         }
 
         if ($request->filled('password')) {
-            $userData['password'] = Hash::make($request->password);
+            $user->password = Hash::make($request->password);
         }
 
-        if (!empty($userData)) {
-            $user->update($userData);
-        }
+        $user->save();
 
         return redirect()
             ->route('admin.profil.index')
