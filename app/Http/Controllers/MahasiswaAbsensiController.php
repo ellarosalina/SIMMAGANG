@@ -7,6 +7,7 @@ use App\Models\AbsensiReopening;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Inertia\Inertia;
 
 class MahasiswaAbsensiController extends Controller
 {
@@ -15,9 +16,9 @@ class MahasiswaAbsensiController extends Controller
         $penempatan = Auth::user()->mahasiswa->penempatans()->latest()->first();
 
         if (!$penempatan) {
-            return view('mahasiswa.absensi.index', [
+            return Inertia::render('Mahasiswa/Absensi/Index', [
                 'penempatan' => null,
-                'rekapAbsensi' => collect(),
+                'rekapAbsensi' => [],
             ]);
         }
 
@@ -32,11 +33,8 @@ class MahasiswaAbsensiController extends Controller
         $hariIni = Carbon::today();
 
         if ($hariIni->lt($tanggalMulai)) {
-
             $rekapAbsensi = collect();
-
         } else {
-
             $tanggalAkhir = $hariIni->gt($tanggalSelesai)
                 ? $tanggalSelesai
                 : $hariIni;
@@ -58,19 +56,15 @@ class MahasiswaAbsensiController extends Controller
             $tanggal = $tanggalMulai->copy();
 
             while ($tanggal->lte($tanggalAkhir)) {
-
                 if ($tanggal->isWeekday()) {
-
                     $tanggalKey = $tanggal->format('Y-m-d');
 
                     $absensi = $dataAbsensi->get($tanggalKey);
-
                     $reopening = $dataReopening->get($tanggalKey);
 
                     if ($absensi) {
-
                         $rekapAbsensi->push([
-                            'tanggal' => $tanggal->copy(),
+                            'tanggal' => $tanggal->format('Y-m-d'),
                             'absensi' => $absensi,
                             'status' => $absensi->status,
                             'jam_masuk' => $absensi->jam_masuk,
@@ -78,9 +72,7 @@ class MahasiswaAbsensiController extends Controller
                             'ada_data' => true,
                             'dibuka_kembali' => false,
                         ]);
-
                     } else {
-
                         if ($tanggal->isSameDay($hariIni)) {
                             $status = 'belum_absen';
                         } elseif ($reopening) {
@@ -90,7 +82,7 @@ class MahasiswaAbsensiController extends Controller
                         }
 
                         $rekapAbsensi->push([
-                            'tanggal' => $tanggal->copy(),
+                            'tanggal' => $tanggal->format('Y-m-d'),
                             'absensi' => null,
                             'status' => $status,
                             'jam_masuk' => null,
@@ -106,14 +98,14 @@ class MahasiswaAbsensiController extends Controller
 
             $rekapAbsensi = $rekapAbsensi
                 ->sortByDesc(function ($item) {
-                    return $item['tanggal']->format('Y-m-d');
+                    return $item['tanggal'];
                 })
                 ->values();
         }
 
-        return view('mahasiswa.absensi.index', [
+        return Inertia::render('Mahasiswa/Absensi/Index', [
             'penempatan' => $penempatan,
-            'rekapAbsensi' => $rekapAbsensi,
+            'rekapAbsensi' => $rekapAbsensi->values()->all(),
         ]);
     }
 
@@ -132,21 +124,15 @@ class MahasiswaAbsensiController extends Controller
         $tanggalInput = $request->query('tanggal');
 
         if ($tanggalInput) {
-
             try {
-
                 $tanggalYangDipilih = Carbon::parse($tanggalInput)
                     ->startOfDay();
-
             } catch (\Exception $e) {
-
                 return redirect()
                     ->route('mahasiswa.absensi.index')
                     ->with('error', 'Tanggal absensi tidak valid.');
             }
-
         } else {
-
             $tanggalYangDipilih = $hariIni
                 ->copy()
                 ->startOfDay();
@@ -210,9 +196,9 @@ class MahasiswaAbsensiController extends Controller
             ->locale('id')
             ->translatedFormat('l');
 
-        return view('mahasiswa.absensi.create', [
+        return Inertia::render('Mahasiswa/Absensi/Create', [
             'penempatan' => $penempatan,
-            'tanggalHariIni' => $tanggalYangDipilih,
+            'tanggalHariIni' => $tanggalYangDipilih->format('Y-m-d'),
             'hariHariIni' => $hariHariIni,
             'sudahAbsen' => $sudahAbsen,
             'reopening' => $reopening,
@@ -300,25 +286,25 @@ class MahasiswaAbsensiController extends Controller
         }
 
         Absensi::create([
-    'penempatan_id' => $penempatan->id,
-    'tanggal' => $tanggal->format('Y-m-d'),
-    'jam_masuk' => $request->jam_masuk,
-    'jam_pulang' => $request->jam_pulang,
-    'status' => $request->status,
-]);
+            'penempatan_id' => $penempatan->id,
+            'tanggal' => $tanggal->format('Y-m-d'),
+            'jam_masuk' => $request->jam_masuk,
+            'jam_pulang' => $request->jam_pulang,
+            'status' => $request->status,
+        ]);
 
-AbsensiReopening::where('penempatan_id', $penempatan->id)
-    ->whereDate('tanggal', $tanggal)
-    ->delete();
+        AbsensiReopening::where('penempatan_id', $penempatan->id)
+            ->whereDate('tanggal', $tanggal)
+            ->delete();
 
-return redirect()
-    ->route('mahasiswa.absensi.index')
-    ->with(
-        'success',
-        'Absensi tanggal ' .
-        $tanggal->locale('id')->translatedFormat('d F Y') .
-        ' berhasil disimpan.'
-    );
+        return redirect()
+            ->route('mahasiswa.absensi.index')
+            ->with(
+                'success',
+                'Absensi tanggal ' .
+                $tanggal->locale('id')->translatedFormat('d F Y') .
+                ' berhasil disimpan.'
+            );
     }
 
     public function edit(Absensi $absensi)
@@ -329,7 +315,9 @@ return redirect()
             abort(403, 'Anda tidak memiliki akses ke absensi ini.');
         }
 
-        return view('mahasiswa.absensi.edit', compact('absensi'));
+        return Inertia::render('Mahasiswa/Absensi/Edit', [
+            'absensi' => $absensi,
+        ]);
     }
 
     public function update(Request $request, Absensi $absensi)

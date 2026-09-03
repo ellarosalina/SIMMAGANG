@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,7 +29,22 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        /** @var User $user */
+        $user = Auth::user();
+
+        if ($user->hasRole('admin_gtk')) {
+            return redirect()->route('admin.dashboard');
+        }
+
+        if ($user->hasRole('guru_pamong')) {
+            return redirect()->route('guru-pamong.dashboard');
+        }
+
+        if ($user->hasRole('mahasiswa')) {
+            return redirect()->route('mahasiswa.dashboard');
+        }
+
+        return redirect()->route('dashboard');
     }
 
     /**
@@ -42,6 +58,6 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/login');
     }
 }

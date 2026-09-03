@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import AdminLayout from '../Layouts/AdminLayout.vue';
+import AdminLayout from '../../Layouts/AdminLayout.vue';
 
 defineOptions({
     layout: AdminLayout,

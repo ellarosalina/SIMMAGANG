@@ -64,7 +64,7 @@ class DashboardController extends Controller
             'revisi'
         )->count();
 
-        return Inertia::render('Dashboard', [
+        return Inertia::render('Admin/Dashboard', [
             'title' => 'Dashboard',
             'subtitle' => 'Sistem Informasi Monitoring Magang Mahasiswa.',
             'totalMahasiswa' => $totalMahasiswa,
@@ -83,8 +83,9 @@ class DashboardController extends Controller
         $guruPamong = Auth::user()->guruPamong;
 
         if (!$guruPamong) {
-            return view('dashboards.guru-pamong', [
-                'mahasiswaBimbingan' => collect(),
+            return Inertia::render('GuruPamong/Dashboard', [
+                'guruPamong' => null,
+                'mahasiswaBimbingan' => [],
                 'mahasiswaCount' => 0,
                 'menungguVerifikasi' => 0,
                 'logbookDisetujui' => 0,
@@ -93,7 +94,7 @@ class DashboardController extends Controller
 
         $mahasiswaBimbingan = Penempatan::with([
             'mahasiswa.user',
-            'sekolah'
+            'sekolah',
         ])
             ->where('guru_pamong_id', $guruPamong->id)
             ->whereIn('status', ['menunggu', 'berjalan'])
@@ -127,13 +128,13 @@ class DashboardController extends Controller
             ->where('status_verifikasi', 'disetujui')
             ->count();
 
-        return view('dashboards.guru-pamong', compact(
-            'guruPamong',
-            'mahasiswaBimbingan',
-            'mahasiswaCount',
-            'menungguVerifikasi',
-            'logbookDisetujui'
-        ));
+        return Inertia::render('GuruPamong/Dashboard', [
+            'guruPamong' => $guruPamong,
+            'mahasiswaBimbingan' => $mahasiswaBimbingan,
+            'mahasiswaCount' => $mahasiswaCount,
+            'menungguVerifikasi' => $menungguVerifikasi,
+            'logbookDisetujui' => $logbookDisetujui,
+        ]);
     }
 
     public function mahasiswa()
@@ -141,7 +142,7 @@ class DashboardController extends Controller
         $mahasiswa = Auth::user()->mahasiswa;
 
         if (!$mahasiswa) {
-            return view('dashboards.mahasiswa', [
+            return Inertia::render('Mahasiswa/Dashboard', [
                 'penempatan' => null,
                 'hariMagang' => 0,
                 'totalHariKerja' => 0,
@@ -163,11 +164,15 @@ class DashboardController extends Controller
         }
 
         $penempatan = $mahasiswa->penempatans()
+            ->with([
+                'sekolah',
+                'guruPamong',
+            ])
             ->latest()
             ->first();
 
         if (!$penempatan) {
-            return view('dashboards.mahasiswa', [
+            return Inertia::render('Mahasiswa/Dashboard', [
                 'penempatan' => null,
                 'hariMagang' => 0,
                 'totalHariKerja' => 0,
@@ -319,7 +324,7 @@ class DashboardController extends Controller
             $sisaHari = 0;
         }
 
-        return view('dashboards.mahasiswa', [
+        return Inertia::render('Mahasiswa/Dashboard', [
             'penempatan' => $penempatan,
             'hariMagang' => $hariMagang,
             'totalHariKerja' => $totalHariKerja,

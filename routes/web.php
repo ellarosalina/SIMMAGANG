@@ -72,12 +72,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/absensi', [MahasiswaAbsensiController::class, 'store'])->name('absensi.store');
         Route::get('/absensi/{absensi}/edit', [MahasiswaAbsensiController::class, 'edit'])->name('absensi.edit');
         Route::put('/absensi/{absensi}', [MahasiswaAbsensiController::class, 'update'])->name('absensi.update');
-        Route::get('/logbook', [MahasiswaLogbookController::class, 'index'])->name('logbook.index');
-        Route::get('/logbook/create', [MahasiswaLogbookController::class, 'create'])->name('logbook.create');
-        Route::post('/logbook', [MahasiswaLogbookController::class, 'store'])->name('logbook.store');
-        Route::get('/logbook/{logbook}/edit', [MahasiswaLogbookController::class, 'edit'])->name('mahasiswa.logbook.edit');
-        Route::put('/logbook/{logbook}', [MahasiswaLogbookController::class, 'update'])->name('mahasiswa.logbook.update');
-        Route::delete('/logbook/{logbook}', [MahasiswaLogbookController::class, 'destroy'])->name('mahasiswa.logbook.destroy');
+        Route::get('/logbook', [MahasiswaLogbookController::class, 'index'])->name('logbook.index'); 
+        Route::get('/logbook/create', [MahasiswaLogbookController::class, 'create'])->name('logbook.create'); 
+        Route::post('/logbook', [MahasiswaLogbookController::class, 'store'])->name('logbook.store'); 
+        Route::get('/logbook/{logbook}/edit', [MahasiswaLogbookController::class, 'edit'])->name('logbook.edit'); 
+        Route::put('/logbook/{logbook}', [MahasiswaLogbookController::class, 'update'])->name('logbook.update'); 
+        Route::delete('/logbook/{logbook}', [MahasiswaLogbookController::class, 'destroy'])->name('logbook.destroy'); 
         Route::get('/profil', [MahasiswaProfilController::class, 'index'])->name('profil.index');
         Route::put('/profil', [MahasiswaProfilController::class, 'update'])->name('profil.update');
     });

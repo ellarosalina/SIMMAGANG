@@ -6,6 +6,7 @@ use App\Models\Logbook;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class MahasiswaLogbookController extends Controller
 {
@@ -14,9 +15,9 @@ class MahasiswaLogbookController extends Controller
         $penempatan = Auth::user()->mahasiswa->penempatans()->latest()->first();
 
         if (!$penempatan) {
-            return view('mahasiswa.logbook.index', [
+            return Inertia::render('Mahasiswa/Logbook/Index', [
                 'penempatan' => null,
-                'logbooks' => collect(),
+                'logbooks' => [],
                 'status' => 'semua',
             ]);
         }
@@ -38,11 +39,11 @@ class MahasiswaLogbookController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        return view('mahasiswa.logbook.index', compact(
-            'penempatan',
-            'logbooks',
-            'status'
-        ));
+        return Inertia::render('Mahasiswa/Logbook/Index', [
+            'penempatan' => $penempatan,
+            'logbooks' => $logbooks,
+            'status' => $status,
+        ]);
     }
 
     public function create()
@@ -55,7 +56,9 @@ class MahasiswaLogbookController extends Controller
                 ->with('error', 'Anda belum memiliki penempatan magang. Hubungi Admin GTK.');
         }
 
-        return view('mahasiswa.logbook.create', compact('penempatan'));
+        return Inertia::render('Mahasiswa/Logbook/Create', [
+            'penempatan' => $penempatan,
+        ]);
     }
 
     public function store(Request $request)
@@ -113,7 +116,9 @@ class MahasiswaLogbookController extends Controller
 
     public function edit(Logbook $logbook)
     {
-        return view('mahasiswa.logbook.edit', compact('logbook'));
+        return Inertia::render('Mahasiswa/Logbook/Edit', [
+            'logbook' => $logbook,
+        ]);
     }
 
     public function update(Request $request, Logbook $logbook)
@@ -141,7 +146,6 @@ class MahasiswaLogbookController extends Controller
         $path = $logbook->dokumentasi;
 
         if ($request->hasFile('dokumentasi')) {
-
             if ($logbook->dokumentasi) {
                 Storage::disk('public')
                     ->delete($logbook->dokumentasi);
