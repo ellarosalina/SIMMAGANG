@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 
 class MahasiswaProfilController extends Controller
 {
@@ -13,7 +14,9 @@ class MahasiswaProfilController extends Controller
     {
         $mahasiswa = Auth::user()->mahasiswa;
 
-        return view('mahasiswa.profil.index', compact('mahasiswa'));
+        return Inertia::render('Mahasiswa/Profil/Index', [
+            'mahasiswa' => $mahasiswa->load('user'),
+        ]);
     }
 
     public function update(Request $request)
@@ -40,16 +43,39 @@ class MahasiswaProfilController extends Controller
         // Upload foto profil
         if ($request->hasFile('foto')) {
 
-            // Hapus foto lama jika ada
-            if ($mahasiswa->foto && Storage::disk('public')->exists($mahasiswa->foto)) {
-                Storage::disk('public')->delete($mahasiswa->foto);
+            // Simpan path foto lama
+            $fotoLamaMahasiswa = $mahasiswa->foto;
+            $fotoLamaUser = $user->foto;
+
+            // Hapus foto lama mahasiswa jika ada
+            if (
+                $fotoLamaMahasiswa &&
+                Storage::disk('public')->exists($fotoLamaMahasiswa)
+            ) {
+                Storage::disk('public')->delete($fotoLamaMahasiswa);
+            }
+
+            // Jika user mempunyai foto lama yang berbeda,
+            // hapus juga file tersebut
+            if (
+                $fotoLamaUser &&
+                $fotoLamaUser !== $fotoLamaMahasiswa &&
+                Storage::disk('public')->exists($fotoLamaUser)
+            ) {
+                Storage::disk('public')->delete($fotoLamaUser);
             }
 
             // Simpan foto baru
             $fotoPath = $request->file('foto')->store('profile', 'public');
 
-            // Simpan path foto ke database
+            // Simpan foto ke tabel mahasiswa
             $mahasiswa->update([
+                'foto' => $fotoPath,
+            ]);
+
+            // Simpan foto yang sama ke tabel users
+            // agar foto navbar ikut berubah
+            $user->update([
                 'foto' => $fotoPath,
             ]);
         }

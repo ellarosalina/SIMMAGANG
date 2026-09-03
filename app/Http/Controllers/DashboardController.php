@@ -12,70 +12,50 @@ use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index()
-    {
-        /** @var \App\Models\User $user */
-        $user = Auth::user();
-
-        if ($user->hasRole('admin_gtk')) {
-            return redirect()->route('admin.dashboard');
-        }
-
-        if ($user->hasRole('guru_pamong')) {
-            return redirect()->route('guru-pamong.dashboard');
-        }
-
-        if ($user->hasRole('mahasiswa')) {
-            return redirect()->route('mahasiswa.dashboard');
-        }
-
-        abort(403, 'Akun Anda belum memiliki role. Hubungi Admin GTK.');
-    }
-
     public function admin()
-    {
-        $totalMahasiswa = Mahasiswa::count();
+{
+    $totalMahasiswa = Mahasiswa::count();
 
-        $totalSekolah = Sekolah::count();
+    $totalSekolah = Sekolah::count();
 
-        $totalGuruPamong = GuruPamong::count();
+    $totalGuruPamong = GuruPamong::count();
 
-        $totalPenempatan = Penempatan::count();
+    $totalPenempatan = Penempatan::count();
 
-        $penempatanPerStatus = [
-            'menunggu' => Penempatan::where('status', 'menunggu')->count(),
-            'berjalan' => Penempatan::where('status', 'berjalan')->count(),
-            'selesai' => Penempatan::where('status', 'selesai')->count(),
-            'dibatalkan' => Penempatan::where('status', 'dibatalkan')->count(),
-        ];
+    $penempatanPerStatus = [
+        'menunggu' => Penempatan::where('status', 'menunggu')->count(),
+        'berjalan' => Penempatan::where('status', 'berjalan')->count(),
+        'selesai' => Penempatan::where('status', 'selesai')->count(),
+        'dibatalkan' => Penempatan::where('status', 'dibatalkan')->count(),
+    ];
 
-        $logbookMenunggu = Logbook::where(
-            'status_verifikasi',
-            'menunggu'
-        )->count();
+    $logbookMenunggu = Logbook::where(
+        'status_verifikasi',
+        'menunggu'
+    )->count();
 
-        $logbookDisetujui = Logbook::where(
-            'status_verifikasi',
-            'disetujui'
-        )->count();
+    $logbookDisetujui = Logbook::where(
+        'status_verifikasi',
+        'disetujui'
+    )->count();
 
-        $logbookRevisi = Logbook::where(
-            'status_verifikasi',
-            'revisi'
-        )->count();
+    $logbookRevisi = Logbook::where(
+        'status_verifikasi',
+        'revisi'
+    )->count();
 
-        return Inertia::render('Admin/Dashboard', [
-            'title' => 'Dashboard',
-            'subtitle' => 'Sistem Informasi Monitoring Magang Mahasiswa.',
-            'totalMahasiswa' => $totalMahasiswa,
-            'totalSekolah' => $totalSekolah,
-            'totalGuruPamong' => $totalGuruPamong,
-            'totalPenempatan' => $totalPenempatan,
-            'penempatanPerStatus' => $penempatanPerStatus,
-            'logbookMenunggu' => $logbookMenunggu,
-            'logbookDisetujui' => $logbookDisetujui,
-            'logbookRevisi' => $logbookRevisi,
-        ]);
+    return Inertia::render('Admin/Dashboard', [
+        'title' => 'Dashboard',
+        'subtitle' => 'Sistem Informasi Monitoring Magang Mahasiswa.',
+        'totalMahasiswa' => $totalMahasiswa,
+        'totalSekolah' => $totalSekolah,
+        'totalGuruPamong' => $totalGuruPamong,
+        'totalPenempatan' => $totalPenempatan,
+        'penempatanPerStatus' => $penempatanPerStatus,
+        'logbookMenunggu' => $logbookMenunggu,
+        'logbookDisetujui' => $logbookDisetujui,
+        'logbookRevisi' => $logbookRevisi,
+    ]);
     }
 
     public function guruPamong()

@@ -125,11 +125,11 @@ const logout = async () => {
                     class="w-10 h-10 rounded-full bg-slate-600 flex items-center justify-center text-lg font-bold overflow-hidden flex-shrink-0"
                 >
                     <img
-                        v-if="user.foto"
-                        :src="`/storage/${user.foto}`"
+                        v-if="user?.foto"
+                        :src="`/storage/${user.foto}?t=${Date.now()}`"
                         alt="Foto Profil"
-                        class="w-full h-full object-cover"
-                    >
+                        class="w-10 h-10 rounded-full object-cover"
+                    />
 
                     <span v-else>
                         {{
